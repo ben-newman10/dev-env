@@ -1,4 +1,11 @@
-from aws_cdk import Stack, Tags, aws_ec2 as ec2
+from aws_cdk import (
+    Stack,
+    Tags,
+    aws_ec2 as ec2,
+    aws_lambda as _lambda,
+    aws_iam as iam,
+    Duration,
+)
 from constructs import Construct
 
 
@@ -56,3 +63,24 @@ class Ec2Stack(Stack):
 
         Tags.of(instance).add("Name", "BenDev")
         Tags.of(instance).add("autoshutdown", "true")
+
+        # Lambda to auto shutdown instances
+        shutdown_lambda = _lambda.Function(
+            self,
+            "AutoShutdownLambda",
+            runtime=_lambda.Runtime.PYTHON_3_8,
+            handler="autoshutdown.handler",
+            code=_lambda.Code.from_asset("lambda"),
+            timeout=Duration.seconds(30),
+            memory_size=256,
+        )
+
+        # Add permissions to the Lambda function
+        shutdown_lambda.add_to_role_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=["ec2:StopInstances"],
+                resources=["arn:aws:ec2:*:*:instance/*"],
+                conditions={"StringEquals": {"ec2:ResourceTag/autoshutdown": "true"}},
+            )
+        )
