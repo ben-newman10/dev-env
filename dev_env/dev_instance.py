@@ -55,8 +55,15 @@ class DevInstance(Construct):
             ),
             require_imdsv2=True,
             role=instance_role,
+            user_data=ec2.UserData.for_linux(),
         )
 
         # Add tags to the EC2
         Tags.of(instance).add("Name", id)
         Tags.of(instance).add("autoshutdown", "true")
+
+        # Add user data to the instance
+        instance.user_data.add_commands(
+            "SECRET=$(aws secretsmanager get-secret-value --secret-id setup-secret --query SecretString --output text --region eu-west-2)"
+            "echo $SECRET > /home/ec2-user/setup-secret.txt"
+        )

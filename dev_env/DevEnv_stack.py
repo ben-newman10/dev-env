@@ -17,7 +17,7 @@ class DevEnvStack(Stack):
         setup_secret = secretsmanager.Secret(
             self,
             "DevSetupSecret",
-            secret_name="my-secret",
+            secret_name="setup-secret",
             generate_secret_string=secretsmanager.SecretStringGenerator(
                 secret_string_template='{"username": "admin"}',
                 generate_string_key="password",
@@ -25,6 +25,8 @@ class DevEnvStack(Stack):
                 exclude_punctuation=True,
             ),
         )
+        # Get secret value
+        # aws secretsmanager get-secret-value --secret-id setup-secret --query SecretString --output text --region eu-west-2
 
         # Create Dev Instances
         DevInstance(self, "BenDev", vpc=network.vpc, secret_arn=setup_secret.secret_arn)
