@@ -2,6 +2,7 @@ from aws_cdk import (
     Stack,
     Tags,
     aws_events as events,
+    aws_events_targets as targets,
     aws_ec2 as ec2,
     aws_lambda as _lambda,
     aws_iam as iam,
@@ -96,4 +97,4 @@ class Ec2Stack(Stack):
         )
 
         # Add the Lambda function as a target for the rule
-        rule.add_target(shutdown_lambda)
+        rule.add_target(target=targets.LambdaFunction(handler=shutdown_lambda))
