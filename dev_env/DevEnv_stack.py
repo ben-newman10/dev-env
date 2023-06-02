@@ -18,4 +18,4 @@ class DevEnvStack(Stack):
         DevInstance(self, "TomDev", vpc=network.vpc)
 
         # Create autoshutdown lambda (7pm every evening)
-        shutdown_lambda = AutoShutdownLambda(self, "AutoShutdownLambda")
+        AutoShutdownLambda(self, "AutoShutdownLambda")

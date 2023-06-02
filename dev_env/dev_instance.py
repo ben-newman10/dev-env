@@ -1,5 +1,10 @@
 from constructs import Construct
-from aws_cdk import aws_ec2 as ec2, Tags
+from aws_cdk import (
+    aws_ec2 as ec2,
+    Tags,
+    aws_iam as iam,
+    aws_secretsmanager as secretsmanager,
+)
 
 
 class DevInstance(Construct):
@@ -9,6 +14,40 @@ class DevInstance(Construct):
 
     def __init__(self, scope: Construct, id: str, vpc: ec2.Vpc, **kwargs):
         super().__init__(scope, id, **kwargs)
+
+        # Create the Secret
+        my_secret = secretsmanager.Secret(
+            self,
+            "MySecret",
+            secret_name="my-secret",
+            generate_secret_string=secretsmanager.SecretStringGenerator(
+                secret_string_template='{"username": "admin"}',
+                generate_string_key="password",
+                password_length=16,
+                exclude_punctuation=True,
+            ),
+        )
+
+        # Create the EC2 instance role with SSM permissions
+        instance_role = iam.Role(
+            self,
+            "DevInstanceRole",
+            assumed_by=iam.ServicePrincipal("ec2.amazonaws.com"),
+            managed_policies=[
+                iam.ManagedPolicy.from_aws_managed_policy_name(
+                    "AmazonSSMManagedInstanceCore"
+                )
+            ],
+        )
+
+        # Add permissions to the role to access the Secret
+        instance_role.add_to_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=["secretsmanager:GetSecretValue"],
+                resources=[my_secret.secret_arn],
+            )
+        )
 
         # Create EC2 instance
         instance = ec2.Instance(
@@ -21,7 +60,7 @@ class DevInstance(Construct):
                 subnet_type=ec2.SubnetType.PRIVATE_WITH_EGRESS
             ),
             require_imdsv2=True,
-            ssm_session_permissions=True,
+            role=instance_role,
         )
 
         # Add tags to the EC2
