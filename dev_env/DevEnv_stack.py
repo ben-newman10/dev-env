@@ -15,7 +15,6 @@ class DevEnvStack(Stack):
 
         # Create Dev Instances
         DevInstance(self, "BenDev", vpc=network.vpc)
-        DevInstance(self, "TestDev", vpc=network.vpc)
         DevInstance(self, "TomDev", vpc=network.vpc)
 
         # Create autoshutdown lambda (7pm every evening)
