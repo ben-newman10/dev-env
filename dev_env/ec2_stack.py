@@ -1,14 +1,11 @@
 from aws_cdk import (
     Stack,
     Tags,
-    aws_events as events,
-    aws_events_targets as targets,
     aws_ec2 as ec2,
-    aws_lambda as _lambda,
-    aws_iam as iam,
-    Duration,
 )
 from constructs import Construct
+
+from dev_env.autoshutdown_lambda import AutoShutdownLambda
 
 
 class Ec2Stack(Stack):
@@ -66,35 +63,5 @@ class Ec2Stack(Stack):
         Tags.of(instance).add("Name", "BenDev")
         Tags.of(instance).add("autoshutdown", "true")
 
-        # Lambda to auto shutdown instances
-        shutdown_lambda = _lambda.Function(
-            self,
-            "AutoShutdownLambda",
-            runtime=_lambda.Runtime.PYTHON_3_8,
-            handler="autoshutdown.handler",
-            code=_lambda.Code.from_asset("lambda"),
-            timeout=Duration.seconds(30),
-            memory_size=256,
-        )
-
-        # Add permissions to the Lambda function
-        shutdown_lambda.add_to_role_policy(
-            iam.PolicyStatement(
-                effect=iam.Effect.ALLOW,
-                actions=["ec2:StopInstances", "ec2:DescribeInstances"],
-                resources=["arn:aws:ec2:*:*:instance/*"],
-                conditions={"StringEquals": {"ec2:ResourceTag/autoshutdown": "true"}},
-            )
-        )
-
-        # Create the EventBridge rule to trigget lambda at 7pm every day.
-        rule = events.Rule(
-            self,
-            "MyRule",
-            schedule=events.Schedule.cron(
-                minute="0", hour="19", month="*", week_day="*", year="*"
-            ),
-        )
-
-        # Add the Lambda function as a target for the rule
-        rule.add_target(target=targets.LambdaFunction(handler=shutdown_lambda))
+        # Create autoshutdown lambda
+        shutdown_lambda = AutoShutdownLambda(self, "AutoShutdownLambda")
