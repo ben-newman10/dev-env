@@ -28,7 +28,7 @@ class NetworkSetup(Construct):
         self._vpc = ec2.Vpc(
             self,
             "DevVPC",
-            max_azs=2,
+            max_azs=1,
             subnet_configuration=[private_subnet, public_subnet],
         )
 
