@@ -12,21 +12,15 @@ class DevInstance(Construct):
     def vpc(self):
         return self._vpc
 
-    def __init__(self, scope: Construct, id: str, vpc: ec2.Vpc, **kwargs):
+    def __init__(
+        self,
+        scope: Construct,
+        id: str,
+        vpc: ec2.Vpc,
+        secret_arn: secretsmanager.Secret.secret_arn,
+        **kwargs
+    ):
         super().__init__(scope, id, **kwargs)
-
-        # Create the Secret
-        my_secret = secretsmanager.Secret(
-            self,
-            "MySecret",
-            secret_name="my-secret",
-            generate_secret_string=secretsmanager.SecretStringGenerator(
-                secret_string_template='{"username": "admin"}',
-                generate_string_key="password",
-                password_length=16,
-                exclude_punctuation=True,
-            ),
-        )
 
         # Create the EC2 instance role with SSM permissions
         instance_role = iam.Role(
@@ -45,7 +39,7 @@ class DevInstance(Construct):
             iam.PolicyStatement(
                 effect=iam.Effect.ALLOW,
                 actions=["secretsmanager:GetSecretValue"],
-                resources=[my_secret.secret_arn],
+                resources=[secret_arn],
             )
         )
 
