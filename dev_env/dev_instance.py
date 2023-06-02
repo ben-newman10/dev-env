@@ -64,6 +64,6 @@ class DevInstance(Construct):
 
         # Add user data to the instance
         instance.user_data.add_commands(
-            "SECRET=$(aws secretsmanager get-secret-value --secret-id setup-secret --query SecretString --output text --region eu-west-2)"
-            "echo $SECRET > /home/ec2-user/setup-secret.txt"
+            "SECRET=$(aws secretsmanager get-secret-value --secret-id setup-secret --query SecretString --output text --region eu-west-2)",
+            "echo $SECRET > /home/ec2-user/setup-secret.txt",
         )
