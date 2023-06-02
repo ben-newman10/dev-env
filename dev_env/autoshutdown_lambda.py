@@ -23,13 +23,22 @@ class AutoShutdownLambda(Construct):
             memory_size=256,
         )
 
-        # Add permissions to the Lambda function
+        # Add permissions to the Lambda function to shutdown instances
         shutdown_lambda.add_to_role_policy(
             iam.PolicyStatement(
                 effect=iam.Effect.ALLOW,
-                actions=["ec2:StopInstances", "ec2:DescribeInstances"],
-                resources=["*"],
+                actions=["ec2:StopInstances"],
+                resources=["arn:aws:ec2:*:*:instance/*"],
                 conditions={"StringEquals": {"ec2:ResourceTag/autoshutdown": "true"}},
+            )
+        )
+
+        # Add permissions to the Lambda function to get instance states
+        shutdown_lambda.add_to_role_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=["ec2:DescribeInstances"],
+                resources=["*"],
             )
         )
 
