@@ -56,6 +56,15 @@ class DevInstance(Construct):
             require_imdsv2=True,
             role=instance_role,
             user_data=ec2.UserData.for_linux(),
+            block_devices=[
+                ec2.BlockDevice(
+                    device_name="/dev/xvda",
+                    volume=ec2.BlockDeviceVolume.ebs(
+                        volume_size=30,  # Set the root volume to 30GB
+                        delete_on_termination=True,  # Delete volume when instance is terminated
+                    ),
+                )
+            ],
         )
 
         # Add tags to the EC2
