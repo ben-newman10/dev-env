@@ -29,8 +29,20 @@ class DevEnvStack(Stack):
         # aws secretsmanager get-secret-value --secret-id setup-secret --query SecretString --output text --region eu-west-2
 
         # Create Dev Instances
-        DevInstance(self, "BenDev", vpc=network.vpc, secret_arn=setup_secret.secret_arn)
-        DevInstance(self, "TomDev", vpc=network.vpc, secret_arn=setup_secret.secret_arn)
+        DevInstance(
+            self,
+            "BenDev",
+            vpc=network.vpc,
+            secret_arn=setup_secret.secret_arn,
+            security_group=network.security_group,
+        )
+        DevInstance(
+            self,
+            "TomDev",
+            vpc=network.vpc,
+            secret_arn=setup_secret.secret_arn,
+            security_group=network.security_group,
+        )
 
         # Create autoshutdown lambda (7pm every evening)
         AutoShutdownLambda(self, "AutoShutdownLambda")

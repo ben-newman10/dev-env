@@ -18,6 +18,7 @@ class DevInstance(Construct):
         id: str,
         vpc: ec2.Vpc,
         secret_arn: secretsmanager.Secret.secret_arn,
+        security_group: ec2.SecurityGroup,
         **kwargs
     ):
         super().__init__(scope, id, **kwargs)
@@ -54,6 +55,7 @@ class DevInstance(Construct):
                 subnet_type=ec2.SubnetType.PRIVATE_WITH_EGRESS
             ),
             require_imdsv2=True,
+            security_group=security_group,
             role=instance_role,
             user_data=ec2.UserData.for_linux(),
             block_devices=[
