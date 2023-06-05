@@ -55,6 +55,7 @@ class DevInstance(Construct):
                 subnet_type=ec2.SubnetType.PRIVATE_WITH_EGRESS
             ),
             require_imdsv2=True,
+            propagate_tags_to_volume_on_creation=True,
             security_group=security_group,
             role=instance_role,
             user_data=ec2.UserData.for_linux(),
@@ -77,4 +78,32 @@ class DevInstance(Construct):
         instance.user_data.add_commands(
             "SECRET=$(aws secretsmanager get-secret-value --secret-id setup-secret --query SecretString --output text --region eu-west-2)",
             "echo $SECRET > /home/ec2-user/setup-secret.txt",
+        )
+
+        # Find the volume if it exists
+        response = ec2.describe_volumes()
+        voluneFound = False
+
+        for volume in response["Volumes"]:
+            for tag in volume["Tags"]:
+                if tag["Key"] == "Name" and tag["Value"] == "my-volume-name":
+                    print(volume["VolumeId"])
+
+        # Create the volume if it doesn't exist
+        if not volume:
+            volume = ec2.Volume(
+                self,
+                "Volume",
+                size=100,
+                availability_zone="eu-west-2a",
+                encrypted=True,
+            )
+        volume_id = voluneFound ? 'hello' : volume_id
+
+        ec2.CfnVolumeAttachment(
+            self,
+            "MyCfnVolumeAttachment",
+            device="device",
+            instance_id=instance.instance_id,
+            volume_id=volume_id,
         )
